@@ -9,13 +9,16 @@ local connections = {}
 
 local currentTheme = "Discord"
 local espEnabled = true
-local listVisible = true
 local currentTab = "Chevaux"
+local desiredWalkSpeed = 16
+
+local SPEED_MIN, SPEED_MAX = 8, 120
 
 local THEMES = {
 	Discord = {
 		FrameBG = Color3.fromRGB(35, 37, 41),
 		HeaderBG = Color3.fromRGB(47, 49, 54),
+		RowBG = Color3.fromRGB(47, 49, 54),
 		TabActive = Color3.fromRGB(250, 166, 26),
 		TabInactive = Color3.fromRGB(150, 150, 150),
 		TextPrimary = Color3.fromRGB(255, 255, 255),
@@ -31,6 +34,7 @@ local THEMES = {
 	Western = {
 		FrameBG = Color3.fromRGB(60, 45, 30),
 		HeaderBG = Color3.fromRGB(80, 60, 40),
+		RowBG = Color3.fromRGB(80, 60, 40),
 		TabActive = Color3.fromRGB(230, 150, 60),
 		TabInactive = Color3.fromRGB(200, 180, 160),
 		TextPrimary = Color3.fromRGB(255, 255, 255),
@@ -89,6 +93,26 @@ local function isEventModel(model, breed)
 	return false
 end
 
+local function getHorseColor(model)
+	local bestPart, bestVolume = nil, 0
+
+	for _, d in ipairs(model:GetDescendants()) do
+		if d:IsA("BasePart") and d.Transparency < 1 and d.Name ~= "HumanoidRootPart" then
+			local vol = d.Size.X * d.Size.Y * d.Size.Z
+			if vol > bestVolume then
+				bestVolume = vol
+				bestPart = d
+			end
+		end
+	end
+
+	if bestPart then
+		return bestPart.Color
+	end
+
+	return Color3.fromRGB(200, 200, 200)
+end
+
 local function debugHorse(model)
 	print("========== DEBUG CHEVAL : " .. model.Name .. " ==========")
 
@@ -121,6 +145,7 @@ end
 local function setupCharacter(char)
 	Character = char
 	Humanoid = char:WaitForChild("Humanoid")
+	Humanoid.WalkSpeed = desiredWalkSpeed
 end
 
 setupCharacter(Player.Character or Player.CharacterAdded:Wait())
@@ -156,8 +181,8 @@ IconStroke.Parent = MinimizedIcon
 
 local Frame = Instance.new("Frame")
 Frame.Name = "TPFrame"
-Frame.Size = UDim2.new(0, 270, 0, 400)
-Frame.Position = UDim2.new(0.5, -135, 0.5, -200)
+Frame.Size = UDim2.new(0, 290, 0, 430)
+Frame.Position = UDim2.new(0.5, -145, 0.5, -215)
 Frame.AnchorPoint = Vector2.new(0.5, 0.5)
 Frame.BorderSizePixel = 0
 Frame.ClipsDescendants = true
@@ -170,7 +195,7 @@ FrameCorner.Parent = Frame
 local FrameStroke = Instance.new("UIStroke")
 FrameStroke.Parent = Frame
 
--- HEADER (titre + reduire + fermer)
+-- HEADER
 
 local Header = Instance.new("Frame")
 Header.Size = UDim2.new(1, 0, 0, 34)
@@ -217,7 +242,7 @@ CloseCorner.Parent = CloseButton
 local CloseStroke = Instance.new("UIStroke")
 CloseStroke.Parent = CloseButton
 
--- BARRE D'ONGLETS (Chevaux / Iles / Options)
+-- TABS
 
 local TabBar = Instance.new("Frame")
 TabBar.Size = UDim2.new(1, 0, 0, 30)
@@ -254,8 +279,6 @@ local TabChevauxBtn = createTabButton("Chevaux")
 local TabIlesBtn = createTabButton("Îles")
 local TabOptionsBtn = createTabButton("Options")
 
--- ZONE DE CONTENU
-
 local ContentArea = Instance.new("Frame")
 ContentArea.Size = UDim2.new(1, 0, 1, -64)
 ContentArea.Position = UDim2.new(0, 0, 0, 64)
@@ -270,8 +293,8 @@ TabChevaux.BackgroundTransparency = 1
 TabChevaux.Parent = ContentArea
 
 local StatusLabel = Instance.new("TextLabel")
-StatusLabel.Size = UDim2.new(1, -16, 0, 44)
-StatusLabel.Position = UDim2.new(0, 8, 0, 6)
+StatusLabel.Size = UDim2.new(1, -70, 0, 34)
+StatusLabel.Position = UDim2.new(0, 8, 0, 4)
 StatusLabel.Font = Enum.Font.SourceSans
 StatusLabel.TextSize = 12
 StatusLabel.TextWrapped = true
@@ -279,9 +302,40 @@ StatusLabel.TextYAlignment = Enum.TextYAlignment.Top
 StatusLabel.BackgroundTransparency = 1
 StatusLabel.Parent = TabChevaux
 
+-- switch ESP (pill toggle)
+
+local ESPSwitchLabel = Instance.new("TextLabel")
+ESPSwitchLabel.Size = UDim2.new(0, 56, 0, 12)
+ESPSwitchLabel.Position = UDim2.new(1, -62, 0, 2)
+ESPSwitchLabel.Text = "Révéler"
+ESPSwitchLabel.Font = Enum.Font.SourceSans
+ESPSwitchLabel.TextSize = 10
+ESPSwitchLabel.BackgroundTransparency = 1
+ESPSwitchLabel.Parent = TabChevaux
+
+local ESPSwitch = Instance.new("TextButton")
+ESPSwitch.Size = UDim2.new(0, 40, 0, 20)
+ESPSwitch.Position = UDim2.new(1, -54, 0, 16)
+ESPSwitch.Text = ""
+ESPSwitch.AutoButtonColor = false
+ESPSwitch.Parent = TabChevaux
+
+local ESPSwitchCorner = Instance.new("UICorner")
+ESPSwitchCorner.CornerRadius = UDim.new(1, 0)
+ESPSwitchCorner.Parent = ESPSwitch
+
+local ESPKnob = Instance.new("Frame")
+ESPKnob.Size = UDim2.new(0, 16, 0, 16)
+ESPKnob.Position = UDim2.new(1, -18, 0.5, -8)
+ESPKnob.Parent = ESPSwitch
+
+local ESPKnobCorner = Instance.new("UICorner")
+ESPKnobCorner.CornerRadius = UDim.new(1, 0)
+ESPKnobCorner.Parent = ESPKnob
+
 local WarningLabel = Instance.new("TextLabel")
-WarningLabel.Size = UDim2.new(1, -16, 0, 22)
-WarningLabel.Position = UDim2.new(0, 8, 0, 52)
+WarningLabel.Size = UDim2.new(1, -16, 0, 20)
+WarningLabel.Position = UDim2.new(0, 8, 0, 40)
 WarningLabel.Text = "..."
 WarningLabel.Font = Enum.Font.SourceSansSemibold
 WarningLabel.TextSize = 12
@@ -293,38 +347,10 @@ local WarningCorner = Instance.new("UICorner")
 WarningCorner.CornerRadius = UDim.new(0, 5)
 WarningCorner.Parent = WarningLabel
 
-local ToggleListButton = Instance.new("TextButton")
-ToggleListButton.Size = UDim2.new(0.5, -12, 0, 26)
-ToggleListButton.Position = UDim2.new(0, 8, 0, 78)
-ToggleListButton.Text = "Liste ▾"
-ToggleListButton.Font = Enum.Font.SourceSansSemibold
-ToggleListButton.TextSize = 12
-ToggleListButton.AutoButtonColor = false
-ToggleListButton.Parent = TabChevaux
-
-local ESPButton = Instance.new("TextButton")
-ESPButton.Size = UDim2.new(0.5, -12, 0, 26)
-ESPButton.Position = UDim2.new(0.5, 4, 0, 78)
-ESPButton.Text = "Révéler : ON"
-ESPButton.Font = Enum.Font.SourceSansSemibold
-ESPButton.TextSize = 12
-ESPButton.AutoButtonColor = false
-ESPButton.Parent = TabChevaux
-
-local ToggleListCorner = Instance.new("UICorner")
-ToggleListCorner.Parent = ToggleListButton
-local ToggleListStroke = Instance.new("UIStroke")
-ToggleListStroke.Parent = ToggleListButton
-
-local ESPCorner = Instance.new("UICorner")
-ESPCorner.Parent = ESPButton
-local ESPStroke = Instance.new("UIStroke")
-ESPStroke.Parent = ESPButton
-
 local HorseList = Instance.new("ScrollingFrame")
 HorseList.Name = "HorseList"
-HorseList.Position = UDim2.new(0, 8, 0, 110)
-HorseList.Size = UDim2.new(1, -16, 1, -160)
+HorseList.Position = UDim2.new(0, 8, 0, 64)
+HorseList.Size = UDim2.new(1, -16, 1, -108)
 HorseList.BackgroundTransparency = 0.2
 HorseList.BorderSizePixel = 0
 HorseList.ScrollBarThickness = 5
@@ -434,10 +460,40 @@ ThemeCorner.Parent = ThemeButton
 local ThemeStroke = Instance.new("UIStroke")
 ThemeStroke.Parent = ThemeButton
 
+local SpeedLabel = Instance.new("TextLabel")
+SpeedLabel.Size = UDim2.new(1, -16, 0, 18)
+SpeedLabel.Position = UDim2.new(0, 8, 0, 54)
+SpeedLabel.Text = "Vitesse : " .. desiredWalkSpeed
+SpeedLabel.Font = Enum.Font.SourceSansSemibold
+SpeedLabel.TextSize = 13
+SpeedLabel.BackgroundTransparency = 1
+SpeedLabel.TextXAlignment = Enum.TextXAlignment.Left
+SpeedLabel.Parent = TabOptions
+
+local SpeedTrack = Instance.new("TextButton")
+SpeedTrack.Size = UDim2.new(1, -16, 0, 14)
+SpeedTrack.Position = UDim2.new(0, 8, 0, 76)
+SpeedTrack.Text = ""
+SpeedTrack.AutoButtonColor = false
+SpeedTrack.Parent = TabOptions
+
+local SpeedTrackCorner = Instance.new("UICorner")
+SpeedTrackCorner.CornerRadius = UDim.new(1, 0)
+SpeedTrackCorner.Parent = SpeedTrack
+
+local SpeedFill = Instance.new("Frame")
+SpeedFill.Size = UDim2.new((desiredWalkSpeed - SPEED_MIN) / (SPEED_MAX - SPEED_MIN), 0, 1, 0)
+SpeedFill.BorderSizePixel = 0
+SpeedFill.Parent = SpeedTrack
+
+local SpeedFillCorner = Instance.new("UICorner")
+SpeedFillCorner.CornerRadius = UDim.new(1, 0)
+SpeedFillCorner.Parent = SpeedFill
+
 local InfoLabel = Instance.new("TextLabel")
-InfoLabel.Size = UDim2.new(1, -16, 0, 200)
-InfoLabel.Position = UDim2.new(0, 8, 0, 52)
-InfoLabel.Text = "Z = TP cheval\nX = Refresh\nC = Thème\nV = Île suivante\n\nRedimensionne avec le coin ◢ en bas à droite.\nDrag avec le titre ou la barre du bas.\n\nLe bouton Debug affiche les attributs du cheval sélectionné dans la console (F9) pour trouver un vrai flag event."
+InfoLabel.Size = UDim2.new(1, -16, 0, 160)
+InfoLabel.Position = UDim2.new(0, 8, 0, 100)
+InfoLabel.Text = "Z = TP vers le cheval sélectionné\nX = Refresh\nC = Thème\nV = Île suivante\n\nSélectionne un cheval dans la liste (rond à gauche) puis appuie sur TP.\nLe halo autour d'un cheval prend sa vraie couleur.\nDebug affiche les attributs du cheval sélectionné dans la console (F9)."
 InfoLabel.Font = Enum.Font.SourceSans
 InfoLabel.TextSize = 12
 InfoLabel.TextWrapped = true
@@ -445,7 +501,7 @@ InfoLabel.TextYAlignment = Enum.TextYAlignment.Top
 InfoLabel.BackgroundTransparency = 1
 InfoLabel.Parent = TabOptions
 
--- BARRE DE DRAG + RESIZE
+-- DRAG BAR + RESIZE
 
 local DragBar = Instance.new("TextButton")
 DragBar.Name = "DragBar"
@@ -470,13 +526,14 @@ ResizeHandle.AutoButtonColor = false
 ResizeHandle.ZIndex = 10
 ResizeHandle.Parent = Frame
 
-local MIN_SIZE = Vector2.new(240, 340)
-local MAX_SIZE = Vector2.new(650, 700)
+local MIN_SIZE = Vector2.new(260, 380)
+local MAX_SIZE = Vector2.new(700, 750)
 
 local validModels = {}
 local currentModelIndex = 1
 local islandList = {}
 local currentIslandIdx = 0
+local radioRefs = {}
 
 local function getHorseBreed(model)
 
@@ -542,11 +599,13 @@ local function applyTheme(themeName)
 	StatusLabel.TextColor3 = theme.TextPrimary
 	IslandLabel.TextColor3 = theme.TextSecondary
 	InfoLabel.TextColor3 = theme.TextSecondary
+	ESPSwitchLabel.TextColor3 = theme.TextSecondary
+	SpeedLabel.TextColor3 = theme.TextPrimary
 
 	WarningLabel.TextColor3 = theme.TextPrimary
 	WarningStroke.Color = theme.StrokeColor
 
-	for _, b in ipairs({TeleportButton, RefreshButton, DebugButton, ToggleListButton, ESPButton, ThemeButton, IslandNextButton, MinimizeButton, CloseButton}) do
+	for _, b in ipairs({TeleportButton, RefreshButton, DebugButton, ThemeButton, IslandNextButton, MinimizeButton, CloseButton}) do
 		b.BackgroundColor3 = theme.ButtonMain
 		b.TextColor3 = theme.TextPrimary
 	end
@@ -554,6 +613,12 @@ local function applyTheme(themeName)
 	TeleportButton.BackgroundColor3 = theme.ButtonAccent
 	IslandNextButton.BackgroundColor3 = theme.ButtonAccent
 	CloseButton.BackgroundColor3 = theme.ButtonClose
+
+	ESPSwitch.BackgroundColor3 = espEnabled and theme.ButtonAccent or theme.ButtonMain
+	ESPKnob.BackgroundColor3 = theme.TextPrimary
+
+	SpeedTrack.BackgroundColor3 = theme.ButtonMain
+	SpeedFill.BackgroundColor3 = theme.ButtonAccent
 
 	DragBar.BackgroundColor3 = theme.HeaderBG
 	DragBar.TextColor3 = theme.TextSecondary
@@ -651,19 +716,15 @@ local function findValidModels()
 			local isWild = captureProgress ~= nil
 			local breed = getHorseBreed(descendant)
 			local isEvent = isEventModel(descendant, breed)
+			local mainColor = getHorseColor(descendant)
 
 			if espEnabled then
 				local highlight = Instance.new("Highlight")
 				highlight.Name = "TeleportHighlight"
-
-				if isEvent then
-					highlight.FillColor = theme.EventColor
-				else
-					highlight.FillColor = isWild and theme.WarningBG_Wild or theme.ButtonAccent
-				end
-
-				highlight.OutlineColor = Color3.fromRGB(255,255,255)
-				highlight.FillTransparency = 0.5
+				highlight.FillColor = mainColor
+				highlight.OutlineColor = isEvent and theme.EventColor
+					or (isWild and theme.WarningBG_Wild or Color3.fromRGB(255, 255, 255))
+				highlight.FillTransparency = 0.45
 				highlight.OutlineTransparency = 0
 				highlight.Adornee = descendant
 				highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
@@ -675,7 +736,8 @@ local function findValidModels()
 				RootPart = rootPart,
 				IsWild = isWild,
 				Breed = breed,
-				IsEvent = isEvent
+				IsEvent = isEvent,
+				Color = mainColor
 			}
 
 			if isWild then
@@ -745,15 +807,62 @@ local function updateGUIStatus()
 	local pos = modelInfo.RootPart.Position
 
 	StatusLabel.Text = string.format(
-		"%d/%d  %s (%s)\nPos : %.0f %.0f %.0f",
-		currentModelIndex,
-		#validModels,
+		"Sélection : %s (%s)\nPos : %.0f %.0f %.0f",
 		modelInfo.Breed,
 		modelInfo.IsEvent and "EVENT" or "Basique",
 		pos.X, pos.Y, pos.Z
 	)
 
 	checkCurrentModelStatus()
+end
+
+local function updateRadios()
+	local theme = THEMES[currentTheme]
+	for index, radio in pairs(radioRefs) do
+		if index == currentModelIndex then
+			radio.BackgroundColor3 = theme.ButtonAccent
+			radio.BackgroundTransparency = 0
+		else
+			radio.BackgroundColor3 = theme.ButtonMain
+			radio.BackgroundTransparency = 0.5
+		end
+	end
+end
+
+local function buildThumbnail(viewport, model, fallbackColor)
+
+	local ok = pcall(function()
+		local worldModel = Instance.new("WorldModel")
+		worldModel.Parent = viewport
+
+		local clone = model:Clone()
+
+		for _, d in ipairs(clone:GetDescendants()) do
+			if d:IsA("Script") or d:IsA("LocalScript") or d:IsA("Humanoid") or d:IsA("Highlight") then
+				d:Destroy()
+			end
+		end
+
+		clone.Parent = worldModel
+
+		local cf, size = clone:GetBoundingBox()
+		local maxExtent = math.max(size.X, size.Y, size.Z, 1)
+		local camDist = maxExtent * 1.7 + 2
+
+		local camera = Instance.new("Camera")
+		camera.FieldOfView = 45
+		camera.CFrame = CFrame.new(
+			cf.Position + Vector3.new(camDist * 0.6, camDist * 0.45, camDist * 0.6),
+			cf.Position
+		)
+		camera.Parent = viewport
+		viewport.CurrentCamera = camera
+	end)
+
+	if not ok then
+		viewport.BackgroundColor3 = fallbackColor
+		viewport.BackgroundTransparency = 0
+	end
 end
 
 local function createHorseList()
@@ -764,35 +873,87 @@ local function createHorseList()
 		end
 	end
 
-	HorseList.CanvasSize = UDim2.new(0, 0, 0, #validModels * 27)
+	radioRefs = {}
+
+	HorseList.CanvasSize = UDim2.new(0, 0, 0, #validModels * 40)
+
+	local theme = THEMES[currentTheme]
 
 	for index, horse in ipairs(validModels) do
 
-		local button = Instance.new("TextButton")
-		button.Size = UDim2.new(1, -6, 0, 24)
-		button.TextSize = 11
-		button.Font = Enum.Font.SourceSans
+		local row = Instance.new("TextButton")
+		row.Size = UDim2.new(1, -4, 0, 37)
+		row.Text = ""
+		row.AutoButtonColor = false
+		row.BackgroundColor3 = theme.RowBG
+		row.BackgroundTransparency = 0.3
+		row.Parent = HorseList
+
+		local rowCorner = Instance.new("UICorner")
+		rowCorner.CornerRadius = UDim.new(0, 6)
+		rowCorner.Parent = row
+
+		local radio = Instance.new("Frame")
+		radio.Size = UDim2.new(0, 14, 0, 14)
+		radio.Position = UDim2.new(0, 5, 0.5, -7)
+		radio.Parent = row
+
+		local radioCorner = Instance.new("UICorner")
+		radioCorner.CornerRadius = UDim.new(1, 0)
+		radioCorner.Parent = radio
+
+		local radioStroke = Instance.new("UIStroke")
+		radioStroke.Color = theme.StrokeColor
+		radioStroke.Parent = radio
+
+		radioRefs[index] = radio
+
+		local viewport = Instance.new("ViewportFrame")
+		viewport.Size = UDim2.new(0, 32, 0, 32)
+		viewport.Position = UDim2.new(0, 24, 0.5, -16)
+		viewport.BackgroundTransparency = 0.5
+		viewport.Parent = row
+
+		local vpCorner = Instance.new("UICorner")
+		vpCorner.CornerRadius = UDim.new(0, 6)
+		vpCorner.Parent = viewport
+
+		buildThumbnail(viewport, horse.Model, horse.Color)
+
+		local nameLabel = Instance.new("TextLabel")
+		nameLabel.Size = UDim2.new(1, -66, 0, 16)
+		nameLabel.Position = UDim2.new(0, 62, 0, 3)
+		nameLabel.Text = horse.Breed .. (horse.IsEvent and " ★" or "")
+		nameLabel.Font = Enum.Font.SourceSansSemibold
+		nameLabel.TextSize = 12
+		nameLabel.TextColor3 = horse.IsEvent and theme.EventColor or theme.TextPrimary
+		nameLabel.TextXAlignment = Enum.TextXAlignment.Left
+		nameLabel.BackgroundTransparency = 1
+		nameLabel.Parent = row
 
 		local distance = math.floor(
 			(Character.HumanoidRootPart.Position - horse.RootPart.Position).Magnitude
 		)
 
-		local status = horse.IsWild and "SAUV" or "DOM"
-		local eventTag = horse.IsEvent and " ★" or ""
+		local tagLabel = Instance.new("TextLabel")
+		tagLabel.Size = UDim2.new(1, -66, 0, 14)
+		tagLabel.Position = UDim2.new(0, 62, 0, 19)
+		tagLabel.Text = distance .. "m | " .. (horse.IsWild and "Sauvage" or "Domestique")
+		tagLabel.Font = Enum.Font.SourceSans
+		tagLabel.TextSize = 10
+		tagLabel.TextColor3 = theme.TextSecondary
+		tagLabel.TextXAlignment = Enum.TextXAlignment.Left
+		tagLabel.BackgroundTransparency = 1
+		tagLabel.Parent = row
 
-		button.Text = string.format("%d %s|%dm|%s%s", index, horse.Breed, distance, status, eventTag)
-
-		if horse.IsEvent then
-			button.TextColor3 = THEMES[currentTheme].EventColor
-		end
-
-		button.Parent = HorseList
-
-		button.MouseButton1Click:Connect(function()
+		row.MouseButton1Click:Connect(function()
 			currentModelIndex = index
+			updateRadios()
 			updateGUIStatus()
 		end)
 	end
+
+	updateRadios()
 end
 
 local function refreshHorseList()
@@ -809,14 +970,9 @@ local function refreshHorseList()
 	createHorseList()
 end
 
-local function teleportToNextModel()
+local function teleportToSelectedHorse()
 
 	if not GUI.Enabled or #validModels == 0 then return end
-
-	currentModelIndex += 1
-	if currentModelIndex > #validModels then
-		currentModelIndex = 1
-	end
 
 	local target = validModels[currentModelIndex]
 
@@ -854,15 +1010,12 @@ local function toggleTheme()
 	createHorseList()
 end
 
-local function toggleList()
-	listVisible = not listVisible
-	HorseList.Visible = listVisible
-	ToggleListButton.Text = listVisible and "Liste ▾" or "Liste ▸"
-end
-
 local function toggleESP()
 	espEnabled = not espEnabled
-	ESPButton.Text = "Révéler : " .. (espEnabled and "ON" or "OFF")
+
+	local theme = THEMES[currentTheme]
+	ESPSwitch.BackgroundColor3 = espEnabled and theme.ButtonAccent or theme.ButtonMain
+	ESPKnob.Position = espEnabled and UDim2.new(1, -18, 0.5, -8) or UDim2.new(0, 2, 0.5, -8)
 
 	if not espEnabled then
 		for _, obj in ipairs(workspace:GetDescendants()) do
@@ -872,6 +1025,20 @@ local function toggleESP()
 		end
 	else
 		refreshHorseList()
+	end
+end
+
+local function updateSpeedFromInput(input)
+	local relX = input.Position.X - SpeedTrack.AbsolutePosition.X
+	local pct = math.clamp(relX / SpeedTrack.AbsoluteSize.X, 0, 1)
+	local speed = math.floor(SPEED_MIN + (SPEED_MAX - SPEED_MIN) * pct)
+
+	desiredWalkSpeed = speed
+	SpeedFill.Size = UDim2.new(pct, 0, 1, 0)
+	SpeedLabel.Text = "Vitesse : " .. speed
+
+	if Humanoid then
+		Humanoid.WalkSpeed = speed
 	end
 end
 
@@ -955,7 +1122,7 @@ safeConnect(UIS.InputEnded, function(input)
 	end
 end)
 
--- DRAG ICONE REDUITE
+-- DRAG ICONE
 
 local iconDragging = false
 local iconDragStart
@@ -1005,15 +1172,12 @@ safeConnect(ResizeHandle.InputBegan, function(input)
 end)
 
 safeConnect(UIS.InputChanged, function(input)
-	if not resizing then return end
-	if input.UserInputType == Enum.UserInputType.MouseMovement
-		or input.UserInputType == Enum.UserInputType.Touch then
+	if resizing and (input.UserInputType == Enum.UserInputType.MouseMovement
+		or input.UserInputType == Enum.UserInputType.Touch) then
 
 		local delta = input.Position - resizeStart
-
 		local newWidth = math.clamp(startSize.X.Offset + delta.X, MIN_SIZE.X, MAX_SIZE.X)
 		local newHeight = math.clamp(startSize.Y.Offset + delta.Y, MIN_SIZE.Y, MAX_SIZE.Y)
-
 		Frame.Size = UDim2.new(0, newWidth, 0, newHeight)
 	end
 end)
@@ -1025,12 +1189,37 @@ safeConnect(UIS.InputEnded, function(input)
 	end
 end)
 
-safeConnect(TeleportButton.MouseButton1Click, teleportToNextModel)
+-- SLIDER VITESSE
+
+local speedDragging = false
+
+safeConnect(SpeedTrack.InputBegan, function(input)
+	if input.UserInputType == Enum.UserInputType.MouseButton1
+		or input.UserInputType == Enum.UserInputType.Touch then
+		speedDragging = true
+		updateSpeedFromInput(input)
+	end
+end)
+
+safeConnect(UIS.InputChanged, function(input)
+	if speedDragging and (input.UserInputType == Enum.UserInputType.MouseMovement
+		or input.UserInputType == Enum.UserInputType.Touch) then
+		updateSpeedFromInput(input)
+	end
+end)
+
+safeConnect(UIS.InputEnded, function(input)
+	if input.UserInputType == Enum.UserInputType.MouseButton1
+		or input.UserInputType == Enum.UserInputType.Touch then
+		speedDragging = false
+	end
+end)
+
+safeConnect(TeleportButton.MouseButton1Click, teleportToSelectedHorse)
 safeConnect(RefreshButton.MouseButton1Click, refreshHorseList)
 safeConnect(ThemeButton.MouseButton1Click, toggleTheme)
 safeConnect(IslandNextButton.MouseButton1Click, teleportToNextIsland)
-safeConnect(ToggleListButton.MouseButton1Click, toggleList)
-safeConnect(ESPButton.MouseButton1Click, toggleESP)
+safeConnect(ESPSwitch.MouseButton1Click, toggleESP)
 safeConnect(CloseButton.MouseButton1Click, cleanup)
 safeConnect(MinimizeButton.MouseButton1Click, toggleMinimize)
 safeConnect(MinimizedIcon.MouseButton1Click, restoreFromIcon)
@@ -1049,7 +1238,7 @@ safeConnect(UIS.InputBegan, function(input, gameProcessed)
 	if gameProcessed or not GUI.Enabled then return end
 
 	if input.KeyCode == Enum.KeyCode.Z then
-		teleportToNextModel()
+		teleportToSelectedHorse()
 	elseif input.KeyCode == Enum.KeyCode.X then
 		refreshHorseList()
 	elseif input.KeyCode == Enum.KeyCode.C then
