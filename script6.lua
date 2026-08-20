@@ -660,7 +660,100 @@ local function rebuildList()
 	end
 
 end
+--------------------------------------------------
+-- ISLAND TELEPORT
+--------------------------------------------------
 
+local IslandTeleport = Instance.new("TextButton")
+
+IslandTeleport.Size = UDim2.new(1,-20,0,38)
+IslandTeleport.Position = UDim2.fromOffset(10,358)
+IslandTeleport.Text = "🌴  TELEPORTER À L'ÎLE"
+IslandTeleport.Font = Enum.Font.GothamBold
+IslandTeleport.TextSize = 13
+IslandTeleport.TextColor3 = Color3.new(1,1,1)
+IslandTeleport.BackgroundColor3 = Color3.fromRGB(55,58,66)
+IslandTeleport.BorderSizePixel = 0
+IslandTeleport.Parent = Details
+
+local IslandCorner = Instance.new("UICorner")
+IslandCorner.CornerRadius = UDim.new(0,9)
+IslandCorner.Parent = IslandTeleport
+
+local islandIndex = 1
+
+local function getIslands()
+
+	local folder = workspace:FindFirstChild("Islands")
+
+	if not folder then
+		return {}
+	end
+
+	local result = {}
+
+	for _,island in ipairs(folder:GetChildren()) do
+
+		if island:IsA("Model") or island:IsA("Folder") then
+
+			local part = island:FindFirstChildWhichIsA(
+				"BasePart",
+				true
+			)
+
+			if part then
+				table.insert(result,{
+					Object = island,
+					Part = part
+				})
+			end
+
+		end
+
+	end
+
+	table.sort(result,function(a,b)
+		return a.Object.Name < b.Object.Name
+	end)
+
+	return result
+end
+
+IslandTeleport.MouseButton1Click:Connect(function()
+
+	local character = Player.Character
+	if not character then return end
+
+	local islands = getIslands()
+
+	if #islands == 0 then
+		IslandTeleport.Text = "Aucune île trouvée"
+		task.wait(1.5)
+		IslandTeleport.Text = "🌴  TELEPORTER À L'ÎLE"
+		return
+	end
+
+	if islandIndex > #islands then
+		islandIndex = 1
+	end
+
+	local island = islands[islandIndex]
+
+	character:PivotTo(
+		CFrame.new(
+			island.Part.Position + Vector3.new(0,6,0)
+		)
+	)
+
+	IslandTeleport.Text = "🌴 "..island.Object.Name
+
+	islandIndex += 1
+
+	task.wait(1)
+
+	IslandTeleport.Text = "🌴  ÎLE SUIVANTE"
+
+end)
 --------------------------------------------------
 -- TELEPORT
 --------------------------------------------------
