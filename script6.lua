@@ -1,6 +1,6 @@
 -- HORSE FINDER GUI
 -- Pour ton propre jeu Roblox
--- Place ce LocalScript dans StarterPlayerScripts
+-- LocalScript dans StarterPlayerScripts
 
 local Players = game:GetService("Players")
 local UserInputService = game:GetService("UserInputService")
@@ -9,10 +9,11 @@ local Player = Players.LocalPlayer
 local PlayerGui = Player:WaitForChild("PlayerGui")
 
 local MIN_SIZE = Vector2.new(420, 450)
-local MAX_SIZE = Vector2.new(900, 800)
+local MAX_SIZE = Vector2.new(800, 700)
 
 local horses = {}
 local selectedHorse = nil
+local currentFilter = "All"
 
 local gui = Instance.new("ScreenGui")
 gui.Name = "HorseFinder"
@@ -21,22 +22,23 @@ gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 gui.Parent = PlayerGui
 
 --------------------------------------------------
--- MAIN FRAME
+-- MAIN
 --------------------------------------------------
 
 local Main = Instance.new("Frame")
-Main.Size = UDim2.fromOffset(560, 620)
-Main.Position = UDim2.new(0.5, -280, 0.5, -310)
-Main.BackgroundColor3 = Color3.fromRGB(25, 27, 32)
+Main.Size = UDim2.fromOffset(500,500)
+Main.Position = UDim2.new(0.5,-250,0.5,-250)
+Main.BackgroundColor3 = Color3.fromRGB(25,27,32)
 Main.BorderSizePixel = 0
+Main.ClipsDescendants = true
 Main.Parent = gui
 
 local Corner = Instance.new("UICorner")
-Corner.CornerRadius = UDim.new(0, 14)
+Corner.CornerRadius = UDim.new(0,14)
 Corner.Parent = Main
 
 local Stroke = Instance.new("UIStroke")
-Stroke.Color = Color3.fromRGB(70, 75, 90)
+Stroke.Color = Color3.fromRGB(70,75,90)
 Stroke.Thickness = 1
 Stroke.Parent = Main
 
@@ -45,33 +47,33 @@ Stroke.Parent = Main
 --------------------------------------------------
 
 local Header = Instance.new("Frame")
-Header.Size = UDim2.new(1, 0, 0, 58)
-Header.BackgroundColor3 = Color3.fromRGB(35, 38, 45)
+Header.Size = UDim2.new(1,0,0,52)
+Header.BackgroundColor3 = Color3.fromRGB(35,38,45)
 Header.BorderSizePixel = 0
 Header.Parent = Main
 
 local HeaderCorner = Instance.new("UICorner")
-HeaderCorner.CornerRadius = UDim.new(0, 14)
+HeaderCorner.CornerRadius = UDim.new(0,14)
 HeaderCorner.Parent = Header
 
 local Title = Instance.new("TextLabel")
-Title.Size = UDim2.new(1, -120, 1, 0)
-Title.Position = UDim2.fromOffset(18, 0)
+Title.Size = UDim2.new(1,-100,1,0)
+Title.Position = UDim2.fromOffset(15,0)
 Title.BackgroundTransparency = 1
-Title.Text = "🐴  Horse Finder"
-Title.TextColor3 = Color3.fromRGB(255,255,255)
+Title.Text = "Horse Finder"
+Title.TextColor3 = Color3.new(1,1,1)
 Title.Font = Enum.Font.GothamBold
-Title.TextSize = 21
+Title.TextSize = 19
 Title.TextXAlignment = Enum.TextXAlignment.Left
 Title.Parent = Header
 
 local Close = Instance.new("TextButton")
-Close.Size = UDim2.fromOffset(34,34)
-Close.Position = UDim2.new(1,-44,0,12)
+Close.Size = UDim2.fromOffset(32,32)
+Close.Position = UDim2.new(1,-42,0,10)
 Close.Text = "×"
-Close.TextSize = 24
+Close.TextSize = 22
 Close.Font = Enum.Font.GothamBold
-Close.TextColor3 = Color3.fromRGB(255,255,255)
+Close.TextColor3 = Color3.new(1,1,1)
 Close.BackgroundColor3 = Color3.fromRGB(210,65,65)
 Close.BorderSizePixel = 0
 Close.Parent = Header
@@ -85,21 +87,21 @@ CloseCorner.Parent = Close
 --------------------------------------------------
 
 local Search = Instance.new("TextBox")
-Search.Size = UDim2.new(1,-32,0,38)
-Search.Position = UDim2.fromOffset(16,72)
+Search.Size = UDim2.new(1,-30,0,34)
+Search.Position = UDim2.fromOffset(15,62)
 Search.PlaceholderText = "Rechercher une race ou un coat..."
 Search.Text = ""
 Search.ClearTextOnFocus = false
 Search.Font = Enum.Font.Gotham
-Search.TextSize = 14
-Search.TextColor3 = Color3.fromRGB(255,255,255)
+Search.TextSize = 13
+Search.TextColor3 = Color3.new(1,1,1)
 Search.PlaceholderColor3 = Color3.fromRGB(145,145,150)
 Search.BackgroundColor3 = Color3.fromRGB(42,45,52)
 Search.BorderSizePixel = 0
 Search.Parent = Main
 
 local SearchCorner = Instance.new("UICorner")
-SearchCorner.CornerRadius = UDim.new(0,9)
+SearchCorner.CornerRadius = UDim.new(0,8)
 SearchCorner.Parent = Search
 
 --------------------------------------------------
@@ -107,33 +109,33 @@ SearchCorner.Parent = Search
 --------------------------------------------------
 
 local FilterAll = Instance.new("TextButton")
-FilterAll.Size = UDim2.fromOffset(90,32)
-FilterAll.Position = UDim2.fromOffset(16,120)
+FilterAll.Size = UDim2.fromOffset(75,29)
+FilterAll.Position = UDim2.fromOffset(15,105)
 FilterAll.Text = "Tous"
 FilterAll.Font = Enum.Font.GothamSemibold
-FilterAll.TextSize = 13
+FilterAll.TextSize = 12
 FilterAll.TextColor3 = Color3.new(1,1,1)
 FilterAll.BackgroundColor3 = Color3.fromRGB(88,101,242)
 FilterAll.BorderSizePixel = 0
 FilterAll.Parent = Main
 
 local FilterEvent = Instance.new("TextButton")
-FilterEvent.Size = UDim2.fromOffset(90,32)
-FilterEvent.Position = UDim2.fromOffset(112,120)
+FilterEvent.Size = UDim2.fromOffset(75,29)
+FilterEvent.Position = UDim2.fromOffset(96,105)
 FilterEvent.Text = "Events"
 FilterEvent.Font = Enum.Font.GothamSemibold
-FilterEvent.TextSize = 13
+FilterEvent.TextSize = 12
 FilterEvent.TextColor3 = Color3.new(1,1,1)
 FilterEvent.BackgroundColor3 = Color3.fromRGB(55,58,66)
 FilterEvent.BorderSizePixel = 0
 FilterEvent.Parent = Main
 
 local Refresh = Instance.new("TextButton")
-Refresh.Size = UDim2.fromOffset(90,32)
-Refresh.Position = UDim2.fromOffset(208,120)
+Refresh.Size = UDim2.fromOffset(75,29)
+Refresh.Position = UDim2.fromOffset(177,105)
 Refresh.Text = "Refresh"
 Refresh.Font = Enum.Font.GothamSemibold
-Refresh.TextSize = 13
+Refresh.TextSize = 12
 Refresh.TextColor3 = Color3.new(1,1,1)
 Refresh.BackgroundColor3 = Color3.fromRGB(55,58,66)
 Refresh.BorderSizePixel = 0
@@ -141,120 +143,229 @@ Refresh.Parent = Main
 
 for _,button in ipairs({FilterAll,FilterEvent,Refresh}) do
 	local c = Instance.new("UICorner")
-	c.CornerRadius = UDim.new(0,8)
+	c.CornerRadius = UDim.new(0,7)
 	c.Parent = button
 end
 
 --------------------------------------------------
--- HORSE LIST
+-- LIST
 --------------------------------------------------
 
 local List = Instance.new("ScrollingFrame")
 List.Name = "HorseList"
 List.Size = UDim2.new(0.56,-18,1,-175)
-List.Position = UDim2.fromOffset(16,165)
+List.Position = UDim2.fromOffset(15,145)
 List.BackgroundColor3 = Color3.fromRGB(30,32,38)
 List.BorderSizePixel = 0
-List.ScrollBarThickness = 6
+List.ScrollBarThickness = 5
 List.AutomaticCanvasSize = Enum.AutomaticSize.Y
 List.CanvasSize = UDim2.new()
 List.Parent = Main
 
 local ListCorner = Instance.new("UICorner")
-ListCorner.CornerRadius = UDim.new(0,10)
+ListCorner.CornerRadius = UDim.new(0,9)
 ListCorner.Parent = List
 
 local Layout = Instance.new("UIListLayout")
-Layout.Padding = UDim.new(0,8)
+Layout.Padding = UDim.new(0,6)
 Layout.SortOrder = Enum.SortOrder.LayoutOrder
 Layout.Parent = List
 
 local Padding = Instance.new("UIPadding")
-Padding.PaddingTop = UDim.new(0,8)
-Padding.PaddingBottom = UDim.new(0,8)
-Padding.PaddingLeft = UDim.new(0,8)
-Padding.PaddingRight = UDim.new(0,8)
+Padding.PaddingTop = UDim.new(0,6)
+Padding.PaddingBottom = UDim.new(0,6)
+Padding.PaddingLeft = UDim.new(0,6)
+Padding.PaddingRight = UDim.new(0,6)
 Padding.Parent = List
 
 --------------------------------------------------
--- DETAILS PANEL
+-- DETAILS
 --------------------------------------------------
 
 local Details = Instance.new("Frame")
-Details.Size = UDim2.new(0.44,-24,1,-175)
-Details.Position = UDim2.new(0.56,8,0,165)
+Details.Size = UDim2.new(0.44,-22,1,-175)
+Details.Position = UDim2.new(0.56,7,0,145)
 Details.BackgroundColor3 = Color3.fromRGB(35,38,45)
 Details.BorderSizePixel = 0
 Details.Parent = Main
 
 local DetailsCorner = Instance.new("UICorner")
-DetailsCorner.CornerRadius = UDim.new(0,10)
+DetailsCorner.CornerRadius = UDim.new(0,9)
 DetailsCorner.Parent = Details
 
 local Preview = Instance.new("ViewportFrame")
-Preview.Size = UDim2.new(1,-20,0,230)
-Preview.Position = UDim2.fromOffset(10,10)
+Preview.Size = UDim2.new(1,-16,0,125)
+Preview.Position = UDim2.fromOffset(8,8)
 Preview.BackgroundColor3 = Color3.fromRGB(20,22,26)
 Preview.BorderSizePixel = 0
 Preview.Parent = Details
 
 local PreviewCorner = Instance.new("UICorner")
-PreviewCorner.CornerRadius = UDim.new(0,10)
+PreviewCorner.CornerRadius = UDim.new(0,8)
 PreviewCorner.Parent = Preview
 
 local BreedLabel = Instance.new("TextLabel")
-BreedLabel.Size = UDim2.new(1,-20,0,30)
-BreedLabel.Position = UDim2.fromOffset(10,250)
+BreedLabel.Size = UDim2.new(1,-16,0,25)
+BreedLabel.Position = UDim2.fromOffset(8,140)
 BreedLabel.BackgroundTransparency = 1
 BreedLabel.Text = "Aucun cheval"
 BreedLabel.TextColor3 = Color3.new(1,1,1)
 BreedLabel.Font = Enum.Font.GothamBold
-BreedLabel.TextSize = 17
+BreedLabel.TextSize = 14
 BreedLabel.TextXAlignment = Enum.TextXAlignment.Left
 BreedLabel.Parent = Details
 
 local CoatLabel = Instance.new("TextLabel")
-CoatLabel.Size = UDim2.new(1,-20,0,25)
-CoatLabel.Position = UDim2.fromOffset(10,282)
+CoatLabel.Size = UDim2.new(1,-16,0,20)
+CoatLabel.Position = UDim2.fromOffset(8,165)
 CoatLabel.BackgroundTransparency = 1
 CoatLabel.Text = "Coat : inconnu"
 CoatLabel.TextColor3 = Color3.fromRGB(180,180,185)
 CoatLabel.Font = Enum.Font.Gotham
-CoatLabel.TextSize = 13
+CoatLabel.TextSize = 11
 CoatLabel.TextXAlignment = Enum.TextXAlignment.Left
 CoatLabel.Parent = Details
 
 local EventLabel = Instance.new("TextLabel")
-EventLabel.Size = UDim2.new(1,-20,0,28)
-EventLabel.Position = UDim2.fromOffset(10,310)
-EventLabel.BackgroundColor3 = Color3.fromRGB(70,70,80)
+EventLabel.Size = UDim2.new(1,-16,0,25)
+EventLabel.Position = UDim2.fromOffset(8,190)
 EventLabel.Text = "NORMAL"
 EventLabel.TextColor3 = Color3.new(1,1,1)
 EventLabel.Font = Enum.Font.GothamBold
-EventLabel.TextSize = 12
+EventLabel.TextSize = 10
+EventLabel.BackgroundColor3 = Color3.fromRGB(65,68,78)
 EventLabel.Parent = Details
 
 local EventCorner = Instance.new("UICorner")
-EventCorner.CornerRadius = UDim.new(0,7)
+EventCorner.CornerRadius = UDim.new(0,6)
 EventCorner.Parent = EventLabel
 
+--------------------------------------------------
+-- ISLAND TELEPORT
+--------------------------------------------------
+
+local IslandTeleport = Instance.new("TextButton")
+IslandTeleport.Size = UDim2.new(1,-16,0,35)
+IslandTeleport.Position = UDim2.new(0,8,1,-112)
+IslandTeleport.Text = "TELEPORTER A L'ILE SUIVANTE"
+IslandTeleport.Font = Enum.Font.GothamBold
+IslandTeleport.TextSize = 10
+IslandTeleport.TextColor3 = Color3.new(1,1,1)
+IslandTeleport.BackgroundColor3 = Color3.fromRGB(55,58,66)
+IslandTeleport.BorderSizePixel = 0
+IslandTeleport.Parent = Details
+
+local IslandCorner = Instance.new("UICorner")
+IslandCorner.CornerRadius = UDim.new(0,8)
+IslandCorner.Parent = IslandTeleport
+
+local islandIndex = 1
+
+local function getIslands()
+
+	local folder = workspace:FindFirstChild("Islands")
+
+	if not folder then
+		return {}
+	end
+
+	local result = {}
+
+	for _,island in ipairs(folder:GetChildren()) do
+
+		if island:IsA("Model") or island:IsA("Folder") then
+
+			local part = island:FindFirstChildWhichIsA(
+				"BasePart",
+				true
+			)
+
+			if part then
+
+				table.insert(result,{
+					Object = island,
+					Part = part
+				})
+
+			end
+
+		end
+
+	end
+
+	table.sort(result,function(a,b)
+		return a.Object.Name < b.Object.Name
+	end)
+
+	return result
+
+end
+
+IslandTeleport.MouseButton1Click:Connect(function()
+
+	local character = Player.Character
+
+	if not character then
+		return
+	end
+
+	local islands = getIslands()
+
+	if #islands == 0 then
+
+		IslandTeleport.Text = "AUCUNE ILE TROUVEE"
+
+		task.wait(1.5)
+
+		IslandTeleport.Text = "TELEPORTER A L'ILE SUIVANTE"
+
+		return
+
+	end
+
+	if islandIndex > #islands then
+		islandIndex = 1
+	end
+
+	local island = islands[islandIndex]
+
+	character:PivotTo(
+		CFrame.new(
+			island.Part.Position + Vector3.new(0,6,0)
+		)
+	)
+
+	IslandTeleport.Text = island.Object.Name
+
+	islandIndex += 1
+
+	task.wait(1)
+
+	IslandTeleport.Text = "TELEPORTER A L'ILE SUIVANTE"
+
+end)
+
+--------------------------------------------------
+-- HORSE TELEPORT
+--------------------------------------------------
+
 local Teleport = Instance.new("TextButton")
-Teleport.Size = UDim2.new(1,-20,0,45)
-Teleport.Position = UDim2.new(0,10,1,-60)
-Teleport.Text = "TELEPORTER"
+Teleport.Size = UDim2.new(1,-16,0,35)
+Teleport.Position = UDim2.new(0,8,1,-70)
+Teleport.Text = "TELEPORTER AU CHEVAL"
 Teleport.Font = Enum.Font.GothamBold
-Teleport.TextSize = 14
+Teleport.TextSize = 10
 Teleport.TextColor3 = Color3.new(1,1,1)
 Teleport.BackgroundColor3 = Color3.fromRGB(88,101,242)
 Teleport.BorderSizePixel = 0
 Teleport.Parent = Details
 
 local TeleportCorner = Instance.new("UICorner")
-TeleportCorner.CornerRadius = UDim.new(0,9)
+TeleportCorner.CornerRadius = UDim.new(0,8)
 TeleportCorner.Parent = Teleport
 
 --------------------------------------------------
--- DATA DETECTION
+-- DATA
 --------------------------------------------------
 
 local function getString(model,names)
@@ -286,19 +397,18 @@ local function getString(model,names)
 	end
 
 	return "Inconnu"
+
 end
 
 local function getEvent(model)
 
-	local names = {
+	for _,name in ipairs({
 		"IsEvent",
 		"Event",
 		"EventHorse",
 		"Limited",
 		"IsLimited"
-	}
-
-	for _,name in ipairs(names) do
+	}) do
 
 		local value = model:GetAttribute(name)
 
@@ -318,33 +428,19 @@ local function getEvent(model)
 				and obj.Value == true then
 
 				return true
+
 			end
 
 		end
 
 	end
 
-	local breed = getString(model,{"Breed","Race"})
-	local coat = getString(model,{"Coat","CoatName"})
-
-	local text = (breed.." "..coat):lower()
-
-	if text:find("event")
-		or text:find("limited")
-		or text:find("halloween")
-		or text:find("christmas")
-		or text:find("valentine")
-		or text:find("easter")
-		or text:find("summer") then
-
-		return true
-	end
-
 	return false
+
 end
 
 --------------------------------------------------
--- THUMBNAIL
+-- PREVIEW
 --------------------------------------------------
 
 local function createPreview(viewport,model)
@@ -380,10 +476,10 @@ local function createPreview(viewport,model)
 	clone.Parent = world
 
 	local cf,size = clone:GetBoundingBox()
-
 	local maxSize = math.max(size.X,size.Y,size.Z)
 
 	local camera = Instance.new("Camera")
+
 	camera.FieldOfView = 35
 
 	camera.CFrame = CFrame.new(
@@ -398,10 +494,6 @@ local function createPreview(viewport,model)
 	camera.Parent = viewport
 	viewport.CurrentCamera = camera
 
-	local light = Instance.new("PointLight")
-	light.Brightness = 2
-	light.Range = 20
-	light.Parent = clone:FindFirstChildWhichIsA("BasePart",true)
 end
 
 --------------------------------------------------
@@ -415,9 +507,7 @@ local function findHorses()
 	local folder = workspace:FindFirstChild("Horses")
 
 	if not folder then
-
 		folder = workspace:FindFirstChild("Islands")
-
 	end
 
 	if not folder then
@@ -444,47 +534,39 @@ local function findHorses()
 
 			local horseRoot = model:FindFirstChild("HumanoidRootPart")
 
-			if horseRoot then
+			local breed = getString(
+				model,
+				{"Breed","Race","BreedName","HorseBreed"}
+			)
 
-				local breed = getString(
-					model,
-					{"Breed","Race","BreedName","HorseBreed"}
+			local coat = getString(
+				model,
+				{"Coat","CoatName","HorseCoat"}
+			)
+
+			table.insert(horses,{
+				Model = model,
+				Root = horseRoot,
+				Breed = breed,
+				Coat = coat,
+				Event = getEvent(model),
+				Distance = math.floor(
+					(root.Position-horseRoot.Position).Magnitude
 				)
-
-				local coat = getString(
-					model,
-					{"Coat","CoatName","HorseCoat"}
-				)
-
-				local event = getEvent(model)
-
-				table.insert(horses,{
-					Model = model,
-					Root = horseRoot,
-					Breed = breed,
-					Coat = coat,
-					Event = event,
-					Distance = math.floor(
-						(root.Position-horseRoot.Position).Magnitude
-					)
-				})
-
-			end
+			})
 
 		end
 
 	end
 
 	table.sort(horses,function(a,b)
-
 		return a.Distance < b.Distance
-
 	end)
 
 end
 
 --------------------------------------------------
--- DETAILS
+-- SELECT
 --------------------------------------------------
 
 local function selectHorse(horse)
@@ -492,18 +574,19 @@ local function selectHorse(horse)
 	selectedHorse = horse
 
 	BreedLabel.Text = horse.Breed
-
 	CoatLabel.Text = "Coat : "..horse.Coat
 
 	if horse.Event then
 
 		EventLabel.Text = "★ EVENT"
-		EventLabel.BackgroundColor3 = Color3.fromRGB(170,75,210)
+		EventLabel.BackgroundColor3 =
+			Color3.fromRGB(170,75,210)
 
 	else
 
 		EventLabel.Text = "NORMAL"
-		EventLabel.BackgroundColor3 = Color3.fromRGB(65,68,78)
+		EventLabel.BackgroundColor3 =
+			Color3.fromRGB(65,68,78)
 
 	end
 
@@ -514,8 +597,6 @@ end
 --------------------------------------------------
 -- LIST
 --------------------------------------------------
-
-local currentFilter = "All"
 
 local function rebuildList()
 
@@ -533,8 +614,11 @@ local function rebuildList()
 
 		local allowed = true
 
-		if currentFilter == "Event" and not horse.Event then
+		if currentFilter == "Event"
+			and not horse.Event then
+
 			allowed = false
+
 		end
 
 		local searchText =
@@ -551,73 +635,85 @@ local function rebuildList()
 
 			local Row = Instance.new("Frame")
 
-			Row.Size = UDim2.new(1,-4,0,105)
-			Row.BackgroundColor3 = Color3.fromRGB(43,46,54)
+			Row.Size = UDim2.new(1,-4,0,82)
+			Row.BackgroundColor3 =
+				Color3.fromRGB(43,46,54)
+
 			Row.BorderSizePixel = 0
 			Row.Parent = List
 
 			local RowCorner = Instance.new("UICorner")
-			RowCorner.CornerRadius = UDim.new(0,9)
+			RowCorner.CornerRadius = UDim.new(0,8)
 			RowCorner.Parent = Row
 
 			local VP = Instance.new("ViewportFrame")
 
-			VP.Size = UDim2.fromOffset(92,92)
-			VP.Position = UDim2.fromOffset(6,6)
-			VP.BackgroundColor3 = Color3.fromRGB(25,27,32)
+			VP.Size = UDim2.fromOffset(68,68)
+			VP.Position = UDim2.fromOffset(6,7)
+			VP.BackgroundColor3 =
+				Color3.fromRGB(25,27,32)
+
 			VP.BorderSizePixel = 0
 			VP.Parent = Row
 
 			local VPCorner = Instance.new("UICorner")
-			VPCorner.CornerRadius = UDim.new(0,8)
+			VPCorner.CornerRadius = UDim.new(0,7)
 			VPCorner.Parent = VP
 
 			createPreview(VP,horse.Model)
 
 			local Name = Instance.new("TextLabel")
 
-			Name.Size = UDim2.new(1,-110,0,24)
-			Name.Position = UDim2.fromOffset(106,12)
+			Name.Size = UDim2.new(1,-85,0,20)
+			Name.Position = UDim2.fromOffset(82,9)
 			Name.BackgroundTransparency = 1
 			Name.Text = horse.Breed
 			Name.TextColor3 = Color3.new(1,1,1)
 			Name.Font = Enum.Font.GothamBold
-			Name.TextSize = 14
-			Name.TextXAlignment = Enum.TextXAlignment.Left
+			Name.TextSize = 12
+			Name.TextXAlignment =
+				Enum.TextXAlignment.Left
 			Name.Parent = Row
 
 			local Coat = Instance.new("TextLabel")
 
-			Coat.Size = UDim2.new(1,-110,0,20)
-			Coat.Position = UDim2.fromOffset(106,38)
+			Coat.Size = UDim2.new(1,-85,0,18)
+			Coat.Position = UDim2.fromOffset(82,30)
 			Coat.BackgroundTransparency = 1
 			Coat.Text = horse.Coat
-			Coat.TextColor3 = Color3.fromRGB(170,170,180)
+			Coat.TextColor3 =
+				Color3.fromRGB(170,170,180)
+
 			Coat.Font = Enum.Font.Gotham
-			Coat.TextSize = 11
-			Coat.TextXAlignment = Enum.TextXAlignment.Left
+			Coat.TextSize = 10
+			Coat.TextXAlignment =
+				Enum.TextXAlignment.Left
 			Coat.Parent = Row
 
 			local Distance = Instance.new("TextLabel")
 
-			Distance.Size = UDim2.new(1,-110,0,18)
-			Distance.Position = UDim2.fromOffset(106,60)
+			Distance.Size = UDim2.new(1,-85,0,17)
+			Distance.Position = UDim2.fromOffset(82,49)
 			Distance.BackgroundTransparency = 1
 			Distance.Text = horse.Distance.."m"
-			Distance.TextColor3 = Color3.fromRGB(140,145,155)
+			Distance.TextColor3 =
+				Color3.fromRGB(140,145,155)
+
 			Distance.Font = Enum.Font.Gotham
-			Distance.TextSize = 10
-			Distance.TextXAlignment = Enum.TextXAlignment.Left
+			Distance.TextSize = 9
+			Distance.TextXAlignment =
+				Enum.TextXAlignment.Left
 			Distance.Parent = Row
 
 			local Select = Instance.new("TextButton")
 
-			Select.Size = UDim2.new(0,90,0,24)
-			Select.Position = UDim2.new(1,-98,1,-31)
+			Select.Size = UDim2.fromOffset(65,21)
+			Select.Position = UDim2.new(1,-72,1,-28)
 			Select.Text = "Choisir"
 			Select.Font = Enum.Font.GothamBold
-			Select.TextSize = 10
+			Select.TextSize = 9
 			Select.TextColor3 = Color3.new(1,1,1)
+
 			Select.BackgroundColor3 =
 				horse.Event
 				and Color3.fromRGB(170,75,210)
@@ -630,29 +726,8 @@ local function rebuildList()
 			SelectCorner.CornerRadius = UDim.new(0,6)
 			SelectCorner.Parent = Select
 
-			if horse.Event then
-
-				local Event = Instance.new("TextLabel")
-
-				Event.Size = UDim2.fromOffset(55,20)
-				Event.Position = UDim2.new(1,-63,0,8)
-				Event.Text = "EVENT"
-				Event.Font = Enum.Font.GothamBold
-				Event.TextSize = 9
-				Event.TextColor3 = Color3.new(1,1,1)
-				Event.BackgroundColor3 = Color3.fromRGB(170,75,210)
-				Event.Parent = Row
-
-				local EC = Instance.new("UICorner")
-				EC.CornerRadius = UDim.new(0,5)
-				EC.Parent = Event
-
-			end
-
 			Select.MouseButton1Click:Connect(function()
-
 				selectHorse(horse)
-
 			end)
 
 		end
@@ -660,102 +735,9 @@ local function rebuildList()
 	end
 
 end
+
 --------------------------------------------------
--- ISLAND TELEPORT
---------------------------------------------------
-
-local IslandTeleport = Instance.new("TextButton")
-
-IslandTeleport.Size = UDim2.new(1,-20,0,38)
-IslandTeleport.Position = UDim2.fromOffset(10,358)
-IslandTeleport.Text = "🌴  TELEPORTER À L'ÎLE"
-IslandTeleport.Font = Enum.Font.GothamBold
-IslandTeleport.TextSize = 13
-IslandTeleport.TextColor3 = Color3.new(1,1,1)
-IslandTeleport.BackgroundColor3 = Color3.fromRGB(55,58,66)
-IslandTeleport.BorderSizePixel = 0
-IslandTeleport.Parent = Details
-
-local IslandCorner = Instance.new("UICorner")
-IslandCorner.CornerRadius = UDim.new(0,9)
-IslandCorner.Parent = IslandTeleport
-
-local islandIndex = 1
-
-local function getIslands()
-
-	local folder = workspace:FindFirstChild("Islands")
-
-	if not folder then
-		return {}
-	end
-
-	local result = {}
-
-	for _,island in ipairs(folder:GetChildren()) do
-
-		if island:IsA("Model") or island:IsA("Folder") then
-
-			local part = island:FindFirstChildWhichIsA(
-				"BasePart",
-				true
-			)
-
-			if part then
-				table.insert(result,{
-					Object = island,
-					Part = part
-				})
-			end
-
-		end
-
-	end
-
-	table.sort(result,function(a,b)
-		return a.Object.Name < b.Object.Name
-	end)
-
-	return result
-end
-
-IslandTeleport.MouseButton1Click:Connect(function()
-
-	local character = Player.Character
-	if not character then return end
-
-	local islands = getIslands()
-
-	if #islands == 0 then
-		IslandTeleport.Text = "Aucune île trouvée"
-		task.wait(1.5)
-		IslandTeleport.Text = "🌴  TELEPORTER À L'ÎLE"
-		return
-	end
-
-	if islandIndex > #islands then
-		islandIndex = 1
-	end
-
-	local island = islands[islandIndex]
-
-	character:PivotTo(
-		CFrame.new(
-			island.Part.Position + Vector3.new(0,6,0)
-		)
-	)
-
-	IslandTeleport.Text = "🌴 "..island.Object.Name
-
-	islandIndex += 1
-
-	task.wait(1)
-
-	IslandTeleport.Text = "🌴  ÎLE SUIVANTE"
-
-end)
---------------------------------------------------
--- TELEPORT
+-- HORSE TELEPORT
 --------------------------------------------------
 
 Teleport.MouseButton1Click:Connect(function()
@@ -767,12 +749,6 @@ Teleport.MouseButton1Click:Connect(function()
 	local character = Player.Character
 
 	if not character then
-		return
-	end
-
-	local root = character:FindFirstChild("HumanoidRootPart")
-
-	if not root then
 		return
 	end
 
@@ -798,8 +774,11 @@ FilterAll.MouseButton1Click:Connect(function()
 
 	currentFilter = "All"
 
-	FilterAll.BackgroundColor3 = Color3.fromRGB(88,101,242)
-	FilterEvent.BackgroundColor3 = Color3.fromRGB(55,58,66)
+	FilterAll.BackgroundColor3 =
+		Color3.fromRGB(88,101,242)
+
+	FilterEvent.BackgroundColor3 =
+		Color3.fromRGB(55,58,66)
 
 	rebuildList()
 
@@ -809,14 +788,19 @@ FilterEvent.MouseButton1Click:Connect(function()
 
 	currentFilter = "Event"
 
-	FilterEvent.BackgroundColor3 = Color3.fromRGB(170,75,210)
-	FilterAll.BackgroundColor3 = Color3.fromRGB(55,58,66)
+	FilterEvent.BackgroundColor3 =
+		Color3.fromRGB(170,75,210)
+
+	FilterAll.BackgroundColor3 =
+		Color3.fromRGB(55,58,66)
 
 	rebuildList()
 
 end)
 
-Search:GetPropertyChangedSignal("Text"):Connect(rebuildList)
+Search:GetPropertyChangedSignal("Text"):Connect(
+	rebuildList
+)
 
 Refresh.MouseButton1Click:Connect(function()
 
@@ -831,13 +815,17 @@ end)
 
 local DragBar = Instance.new("TextButton")
 
-DragBar.Size = UDim2.new(1,0,0,16)
-DragBar.Position = UDim2.new(0,0,1,-16)
+DragBar.Size = UDim2.new(1,-12,0,14)
+DragBar.Position = UDim2.new(0,6,1,-14)
 DragBar.Text = "≡  DRAG"
-DragBar.TextSize = 10
+DragBar.TextSize = 9
 DragBar.Font = Enum.Font.GothamBold
-DragBar.TextColor3 = Color3.fromRGB(150,155,165)
-DragBar.BackgroundColor3 = Color3.fromRGB(35,38,45)
+DragBar.TextColor3 =
+	Color3.fromRGB(150,155,165)
+
+DragBar.BackgroundColor3 =
+	Color3.fromRGB(35,38,45)
+
 DragBar.BorderSizePixel = 0
 DragBar.Parent = Main
 
@@ -847,8 +835,10 @@ local startPosition
 
 DragBar.InputBegan:Connect(function(input)
 
-	if input.UserInputType == Enum.UserInputType.MouseButton1
-		or input.UserInputType == Enum.UserInputType.Touch then
+	if input.UserInputType ==
+		Enum.UserInputType.MouseButton1
+		or input.UserInputType ==
+		Enum.UserInputType.Touch then
 
 		dragging = true
 		dragStart = input.Position
@@ -864,10 +854,13 @@ UserInputService.InputChanged:Connect(function(input)
 		return
 	end
 
-	if input.UserInputType == Enum.UserInputType.MouseMovement
-		or input.UserInputType == Enum.UserInputType.Touch then
+	if input.UserInputType ==
+		Enum.UserInputType.MouseMovement
+		or input.UserInputType ==
+		Enum.UserInputType.Touch then
 
-		local delta = input.Position - dragStart
+		local delta =
+			input.Position - dragStart
 
 		Main.Position = UDim2.new(
 			startPosition.X.Scale,
@@ -882,8 +875,10 @@ end)
 
 UserInputService.InputEnded:Connect(function(input)
 
-	if input.UserInputType == Enum.UserInputType.MouseButton1
-		or input.UserInputType == Enum.UserInputType.Touch then
+	if input.UserInputType ==
+		Enum.UserInputType.MouseButton1
+		or input.UserInputType ==
+		Enum.UserInputType.Touch then
 
 		dragging = false
 
@@ -897,11 +892,13 @@ end)
 
 local Resize = Instance.new("TextButton")
 
-Resize.Size = UDim2.fromOffset(22,22)
-Resize.Position = UDim2.new(1,-22,1,-22)
+Resize.Size = UDim2.fromOffset(20,20)
+Resize.Position = UDim2.new(1,-20,1,-20)
 Resize.Text = "◢"
-Resize.TextSize = 12
-Resize.TextColor3 = Color3.fromRGB(170,175,185)
+Resize.TextSize = 11
+Resize.TextColor3 =
+	Color3.fromRGB(170,175,185)
+
 Resize.BackgroundTransparency = 1
 Resize.BorderSizePixel = 0
 Resize.Parent = Main
@@ -912,8 +909,10 @@ local startSize
 
 Resize.InputBegan:Connect(function(input)
 
-	if input.UserInputType == Enum.UserInputType.MouseButton1
-		or input.UserInputType == Enum.UserInputType.Touch then
+	if input.UserInputType ==
+		Enum.UserInputType.MouseButton1
+		or input.UserInputType ==
+		Enum.UserInputType.Touch then
 
 		resizing = true
 		resizeStart = input.Position
@@ -929,10 +928,13 @@ UserInputService.InputChanged:Connect(function(input)
 		return
 	end
 
-	if input.UserInputType == Enum.UserInputType.MouseMovement
-		or input.UserInputType == Enum.UserInputType.Touch then
+	if input.UserInputType ==
+		Enum.UserInputType.MouseMovement
+		or input.UserInputType ==
+		Enum.UserInputType.Touch then
 
-		local delta = input.Position - resizeStart
+		local delta =
+			input.Position - resizeStart
 
 		local width = math.clamp(
 			startSize.X + delta.X,
@@ -946,7 +948,8 @@ UserInputService.InputChanged:Connect(function(input)
 			MAX_SIZE.Y
 		)
 
-		Main.Size = UDim2.fromOffset(width,height)
+		Main.Size =
+			UDim2.fromOffset(width,height)
 
 	end
 
@@ -954,8 +957,10 @@ end)
 
 UserInputService.InputEnded:Connect(function(input)
 
-	if input.UserInputType == Enum.UserInputType.MouseButton1
-		or input.UserInputType == Enum.UserInputType.Touch then
+	if input.UserInputType ==
+		Enum.UserInputType.MouseButton1
+		or input.UserInputType ==
+		Enum.UserInputType.Touch then
 
 		resizing = false
 
