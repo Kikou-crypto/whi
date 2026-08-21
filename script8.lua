@@ -1,6 +1,6 @@
 --========================================================--
---      PRISMATIC HALTER AUTO - VERSION 300 HALTERS
---      Pour TON PROPRE JEU / Roblox Studio
+--       PRISMATIC HALTER AUTO - VERSION 300
+--       TEST POUR TON PROPRE JEU ROBLOX
 --========================================================--
 
 local Players = game:GetService("Players")
@@ -12,36 +12,32 @@ local PlayerGui = Player:WaitForChild("PlayerGui")
 local Running = false
 
 --========================================================--
--- CONFIGURATION
+-- CONFIG
 --========================================================--
 
 local CONFIG = {
 
-    -- 1 Halter = 1 Gem + 2 Leather
-    GEM_PER_HALTER = 1,
-    LEATHER_PER_HALTER = 2,
+    -- 1 Halter Prismatic =
+    -- 1 Prismatic Gem
+    -- 2 Leather
 
-    -- Quantité disponible/achetée
     PRISMATIC_GEMS = 300,
     LEATHER = 600,
 
-    -- Calcul automatique :
-    -- 300 Gems / 1 Gem = 300 Halters
     HALTERS_PER_CYCLE = 300,
 
-    CLICK_DELAY = 0.35,
-    CRAFT_DELAY = 0.7,
+    CLICK_DELAY = 0.30,
+    CRAFT_DELAY = 0.70,
     UI_TIMEOUT = 5,
 
     LOOP = true,
 
-    -- F8 = ON/OFF
     TOGGLE_KEY = Enum.KeyCode.F8,
 }
 
 
 --========================================================--
--- NORMALISATION DU TEXTE
+-- NORMALISATION
 --========================================================--
 
 local function normalize(text)
@@ -73,10 +69,10 @@ end
 
 
 --========================================================--
--- RECHERCHE DANS PLAYERGUI
+-- TROUVER UN VRAI BOUTON
 --========================================================--
 
-local function findExact(text, timeout)
+local function findButtonExact(text, timeout)
 
     text = normalize(text)
     timeout = timeout or CONFIG.UI_TIMEOUT
@@ -87,12 +83,11 @@ local function findExact(text, timeout)
 
         for _, obj in ipairs(PlayerGui:GetDescendants()) do
 
-            if obj:IsA("GuiObject") and obj.Visible then
+            if obj:IsA("GuiButton")
+                and obj.Visible
+                and getText(obj) == text then
 
-                if getText(obj) == text then
-                    return obj
-                end
-
+                return obj
             end
         end
 
@@ -103,7 +98,7 @@ local function findExact(text, timeout)
 end
 
 
-local function findContains(text, timeout)
+local function findButtonContains(text, timeout)
 
     text = normalize(text)
     timeout = timeout or CONFIG.UI_TIMEOUT
@@ -114,14 +109,14 @@ local function findContains(text, timeout)
 
         for _, obj in ipairs(PlayerGui:GetDescendants()) do
 
-            if obj:IsA("GuiObject") and obj.Visible then
+            if obj:IsA("GuiButton")
+                and obj.Visible then
 
-                local objectText = getText(obj)
+                local buttonText = getText(obj)
 
-                if string.find(objectText, text, 1, true) then
+                if string.find(buttonText, text, 1, true) then
                     return obj
                 end
-
             end
         end
 
@@ -133,7 +128,7 @@ end
 
 
 --========================================================--
--- CLICK
+-- CLIQUER
 --========================================================--
 
 local function activate(obj)
@@ -142,55 +137,52 @@ local function activate(obj)
         return false
     end
 
-    if obj:IsA("GuiButton") then
-
-        print("[AUTO] CLICK ->", getText(obj))
-
-        obj:Activate()
-
-        task.wait(CONFIG.CLICK_DELAY)
-
-        return true
+    if not obj:IsA("GuiButton") then
+        return false
     end
 
-    warn("[AUTO] Objet trouvé mais ce n'est pas un bouton")
+    print("[AUTO] CLICK ->", getText(obj))
 
-    return false
+    obj:Activate()
+
+    task.wait(CONFIG.CLICK_DELAY)
+
+    return true
 end
 
 
 local function clickExact(text)
 
-    local obj = findExact(text)
+    local button = findButtonExact(text)
 
-    if not obj then
+    if not button then
 
         warn("[AUTO] Bouton introuvable :", text)
 
         return false
     end
 
-    return activate(obj)
+    return activate(button)
 end
 
 
 local function clickContains(text)
 
-    local obj = findContains(text)
+    local button = findButtonContains(text)
 
-    if not obj then
+    if not button then
 
-        warn("[AUTO] Bouton contenant '" .. text .. "' introuvable")
+        warn("[AUTO] Bouton introuvable :", text)
 
         return false
     end
 
-    return activate(obj)
+    return activate(button)
 end
 
 
 --========================================================--
--- TEXTBOX DE QUANTITÉ CHEZ LARRY
+-- TEXTBOX LARRY
 --========================================================--
 
 local function findQuantityBox()
@@ -199,16 +191,19 @@ local function findQuantityBox()
 
     for _, obj in ipairs(PlayerGui:GetDescendants()) do
 
-        if obj:IsA("TextBox") and obj.Visible then
+        if obj:IsA("TextBox")
+            and obj.Visible then
+
             table.insert(boxes, obj)
         end
-
     end
 
-    -- Si une seule TextBox est visible
+
+    -- Une seule TextBox visible
     if #boxes == 1 then
         return boxes[1]
     end
+
 
     -- Chercher celle qui contient déjà un nombre
     for _, box in ipairs(boxes) do
@@ -216,8 +211,8 @@ local function findQuantityBox()
         if tonumber(box.Text) ~= nil then
             return box
         end
-
     end
+
 
     return nil
 end
@@ -229,12 +224,14 @@ local function setQuantity(amount)
 
     if not box then
 
-        warn("[AUTO] TextBox de quantité introuvable")
+        warn("[AUTO] TextBox quantité introuvable")
 
         return false
     end
 
+
     print("[AUTO] QUANTITÉ ->", amount)
+
 
     box:CaptureFocus()
 
@@ -244,14 +241,15 @@ local function setQuantity(amount)
 
     box:ReleaseFocus()
 
-    task.wait(0.3)
+    task.wait(0.30)
+
 
     return true
 end
 
 
 --========================================================--
--- ACHETER UN OBJET CHEZ LARRY
+-- ACHAT LARRY
 --========================================================--
 
 local function buyItem(itemName, amount)
@@ -262,7 +260,7 @@ local function buyItem(itemName, amount)
     print("------------------------------------------")
 
 
-    -- Bouton Buy
+    -- Buy
     if not clickExact("Buy") then
         return false
     end
@@ -270,7 +268,7 @@ local function buyItem(itemName, amount)
     task.wait(0.5)
 
 
-    -- Sélection de l'objet
+    -- Objet
     if not clickContains(itemName) then
 
         warn("[AUTO] Objet introuvable :", itemName)
@@ -289,35 +287,34 @@ local function buyItem(itemName, amount)
     task.wait(0.3)
 
 
-    -- Validation de l'achat
+    -- Validation
     if not clickExact("Buy") then
 
-        warn("[AUTO] Bouton Buy de validation introuvable")
+        warn("[AUTO] Validation Buy introuvable")
 
         return false
     end
 
+
     task.wait(1)
 
-    print("[AUTO] ACHAT TERMINÉ")
+
+    print("[AUTO] ACHAT TERMINÉ :", itemName)
 
     return true
 end
 
 
 --========================================================--
--- CRAFT D'UN SEUL HALTER
+-- CRAFT D'UN HALTER
 --========================================================--
 
 local function craftOneHalter()
 
-    -- IMPORTANT :
-    -- On recommence complètement à chaque Halter.
-
     print("[AUTO] Nouveau Halter")
 
 
-    -- 1. Cliquer Halter
+    -- HALTER
     if not clickContains("Halter") then
 
         warn("[AUTO] Halter introuvable")
@@ -328,7 +325,7 @@ local function craftOneHalter()
     task.wait(0.3)
 
 
-    -- 2. Select Rarity
+    -- SELECT RARITY
     if not clickContains("Select Rarity") then
 
         warn("[AUTO] Select Rarity introuvable")
@@ -339,7 +336,7 @@ local function craftOneHalter()
     task.wait(0.3)
 
 
-    -- 3. Prismatic
+    -- PRISMATIC
     if not clickExact("Prismatic") then
 
         warn("[AUTO] Prismatic introuvable")
@@ -350,7 +347,7 @@ local function craftOneHalter()
     task.wait(0.3)
 
 
-    -- 4. Craft
+    -- CRAFT
     if not clickExact("Craft") then
 
         warn("[AUTO] Craft introuvable")
@@ -359,8 +356,9 @@ local function craftOneHalter()
     end
 
 
-    -- Attendre que le jeu termine le craft
+    -- Attendre la fin du craft
     task.wait(CONFIG.CRAFT_DELAY)
+
 
     return true
 end
@@ -372,18 +370,18 @@ end
 
 local function craftAllHalters()
 
-    local amount = CONFIG.HALTERS_PER_CYCLE
+    local total = CONFIG.HALTERS_PER_CYCLE
+
 
     print("")
     print("==========================================")
-    print("[AUTO] CRAFT :", amount, "HALTERS")
+    print("[AUTO] CRAFT DE", total, "HALTERS")
     print("==========================================")
     print("")
 
 
-    for i = 1, amount do
+    for i = 1, total do
 
-        -- Permet d'arrêter avec F8
         if not Running then
 
             print("[AUTO] Arrêt demandé.")
@@ -396,27 +394,27 @@ local function craftAllHalters()
             "[AUTO] HALTER",
             i,
             "/",
-            amount
+            total
         )
 
 
         local success = craftOneHalter()
 
+
         if not success then
 
             warn(
-                "[AUTO] Échec au Halter",
+                "[AUTO] ÉCHEC DU CRAFT :",
                 i,
                 "/",
-                amount
+                total
             )
 
             return false
         end
 
 
-        -- Petite pause
-        task.wait(0.2)
+        task.wait(0.20)
     end
 
 
@@ -426,12 +424,41 @@ local function craftAllHalters()
     print("==========================================")
     print("")
 
+
     return true
 end
 
 
 --========================================================--
--- VENTE DES HALTERS
+-- TROUVER LES BOUTONS HALTER POUR LA VENTE
+--========================================================--
+
+local function getVisibleHalterButtons()
+
+    local buttons = {}
+
+
+    for _, obj in ipairs(PlayerGui:GetDescendants()) do
+
+        if obj:IsA("GuiButton")
+            and obj.Visible then
+
+            local text = getText(obj)
+
+            if string.find(text, "halter", 1, true) then
+
+                table.insert(buttons, obj)
+            end
+        end
+    end
+
+
+    return buttons
+end
+
+
+--========================================================--
+-- VENTE
 --========================================================--
 
 local function sellHalters()
@@ -451,30 +478,61 @@ local function sellHalters()
         return false
     end
 
-    task.wait(0.7)
+
+    task.wait(0.8)
 
 
-    -- Sélection du Halter
-    local halter = findContains("halter")
+    --====================================================--
+    -- TROUVER LES HALTERS DANS LE MENU DE VENTE
+    --====================================================--
 
-    if not halter then
+    local halterButtons = getVisibleHalterButtons()
 
-        warn("[AUTO] Halter introuvable dans le menu Sell")
+
+    if #halterButtons == 0 then
+
+        warn("[AUTO] Aucun bouton Halter trouvé dans Sell")
 
         return false
     end
 
 
-    print("[AUTO] Sélection du Halter")
+    print(
+        "[AUTO] Boutons Halter trouvés :",
+        #halterButtons
+    )
 
-    if not activate(halter) then
-        return false
+
+    --====================================================--
+    -- SÉLECTION
+    --====================================================--
+
+    for _, button in ipairs(halterButtons) do
+
+        if not Running then
+            return false
+        end
+
+
+        print(
+            "[AUTO] Sélection :",
+            getText(button)
+        )
+
+
+        activate(button)
+
+        task.wait(0.20)
     end
+
 
     task.wait(0.5)
 
 
-    -- Done
+    --====================================================--
+    -- DONE
+    --====================================================--
+
     if not clickExact("Done") then
 
         warn("[AUTO] Done introuvable")
@@ -482,10 +540,12 @@ local function sellHalters()
         return false
     end
 
+
     task.wait(1)
 
 
-    print("[AUTO] VENTE TERMINÉE")
+    print("[AUTO] HALTERS VENDUS")
+
 
     return true
 end
@@ -500,7 +560,7 @@ local function runCycle()
     print("")
     print("")
     print("##########################################")
-    print("#           NOUVEAU CYCLE               #")
+    print("#             NOUVEAU CYCLE             #")
     print("##########################################")
     print("")
 
@@ -514,7 +574,7 @@ local function runCycle()
         CONFIG.PRISMATIC_GEMS
     ) then
 
-        warn("[AUTO] Achat des Gems échoué")
+        warn("[AUTO] Échec achat Gems")
 
         return false
     end
@@ -532,7 +592,7 @@ local function runCycle()
         CONFIG.LEATHER
     ) then
 
-        warn("[AUTO] Achat du Leather échoué")
+        warn("[AUTO] Échec achat Leather")
 
         return false
     end
@@ -545,7 +605,8 @@ local function runCycle()
     -- OUVRIR CRAFTING
     --====================================================--
 
-    print("[AUTO] Ouverture du Crafting")
+    print("[AUTO] Ouverture Crafting")
+
 
     if not clickExact("Craft") then
 
@@ -554,16 +615,17 @@ local function runCycle()
         return false
     end
 
+
     task.wait(1)
 
 
     --====================================================--
-    -- 300 HALTERS
+    -- 300 CRAFTS
     --====================================================--
 
     if not craftAllHalters() then
 
-        warn("[AUTO] Craft des Halters échoué")
+        warn("[AUTO] Échec des crafts")
 
         return false
     end
@@ -573,12 +635,12 @@ local function runCycle()
 
 
     --====================================================--
-    -- VENDRE
+    -- SELL
     --====================================================--
 
     if not sellHalters() then
 
-        warn("[AUTO] Vente échouée")
+        warn("[AUTO] Échec de la vente")
 
         return false
     end
@@ -586,7 +648,7 @@ local function runCycle()
 
     print("")
     print("##########################################")
-    print("#          CYCLE TERMINÉ                #")
+    print("#             CYCLE FINI                #")
     print("##########################################")
     print("")
 
@@ -603,7 +665,7 @@ local function start()
 
     if Running then
 
-        print("[AUTO] Déjà activé.")
+        print("[AUTO] Déjà actif.")
 
         return
     end
@@ -614,13 +676,16 @@ local function start()
 
     print("")
     print("==========================================")
-    print("     PRISMATIC HALTER AUTO ACTIVÉ")
+    print("       PRISMATIC HALTER AUTO ON")
     print("==========================================")
     print("")
-    print("300 Gems")
+    print("300 Prismatic Gems")
     print("600 Leather")
     print("300 Halters")
-    print("1 Gem + 2 Leather / Halter")
+    print("")
+    print("1 Gem + 2 Leather = 1 Halter")
+    print("")
+    print("F8 = STOP")
     print("")
 
 
@@ -628,14 +693,19 @@ local function start()
 
         while Running do
 
+
             local success = runCycle()
 
 
             if not success then
 
                 warn("")
-                warn("[AUTO] ERREUR - AUTOMATISATION ARRÊTÉE")
+                warn("==========================================")
+                warn("[AUTO] ERREUR")
+                warn("[AUTO] AUTOMATISATION ARRÊTÉE")
+                warn("==========================================")
                 warn("")
+
 
                 Running = false
 
@@ -653,7 +723,6 @@ local function start()
 
             task.wait(1)
         end
-
     end)
 end
 
@@ -667,13 +736,15 @@ local function stop()
     Running = false
 
     print("")
+    print("==========================================")
     print("[AUTO] ARRÊTÉ")
+    print("==========================================")
     print("")
 end
 
 
 --========================================================--
--- F8 ON / OFF
+-- F8 ON/OFF
 --========================================================--
 
 UserInputService.InputBegan:Connect(function(
@@ -707,24 +778,25 @@ _G.HalterAutoStop = stop
 
 
 --========================================================--
--- FIN
+-- CHARGÉ
 --========================================================--
 
 print("")
 print("==========================================")
-print("  PRISMATIC HALTER AUTO CHARGÉ")
+print("     PRISMATIC HALTER AUTO CHARGÉ")
 print("==========================================")
 print("")
 print("F8 = ON / OFF")
 print("")
-print("1 Halter = 1 Prismatic Gem + 2 Leather")
-print("300 Gems + 600 Leather = 300 Halters")
+print("300 Gems")
+print("600 Leather")
+print("300 Halters")
 print("")
-print("Craft de CHAQUE Halter :")
+print("Craft :")
 print("Halter")
 print("-> Select Rarity")
 print("-> Prismatic")
 print("-> Craft")
 print("")
-print("Puis vente des Halters.")
+print("Puis Sell -> Halter(s) -> Done")
 print("==========================================")
